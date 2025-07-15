@@ -1,0 +1,114 @@
+Azure Service Bus Disaster Recovery Setup Options
+1. Geo-Disaster Recovery (GeoDR)
+Geo-DR is a metadata-only replication mechanism in Azure Service Bus that enables namespace-level disaster recovery using an alias.
+Key Features:
+• ✅ Replicates metadata only (queues, topics, filters, authorization rules)
+• ❌ Does not replicate messages
+• ✅ Allows manual failover to secondary namespace
+• ✅ Uses alias to mask failover behind a consistent name
+• ✅ No code changes needed during failover
+• ⚠️ One-way replication only; failover is not reversible
+• ⚠️ Resource-level settings (e.g., RBAC, private endpoints, VNETs) not replicated
+• ✅ GA (Generally Available) feature
+• ❌ Not supported in Standard tier — Premium tier only
+Pros:
+• Mature and production-ready
+• Fast namespace failover with alias
+• No impact on client connection strings
+Cons:
+• No message continuity
+• Requires manual re-pairing post-failover
+• Not suitable for scenarios needing message durability
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+2. Geo-Replication (Preview)
+Geo-Replication (in preview) allows entity + message replication across Azure Service Bus namespaces.
+ 
+Key Features:
+• ✅ Replicates both metadata and messages
+• ✅ Supports synchronous or asynchronous replication modes
+• ✅ Reversible failover (both directions)
+• ✅ Clients use same hostname after failover
+• ⚠️ Currently in preview — not recommended for production
+• ❌ No support for private endpoints, auto-scaling, encryption
+• ✅ Designed for low RTO/RPO scenarios
+Pros:
+• Full business continuity (metadata + data)
+• Bi-directional failover for high availability
+• Allows zero-data-loss configurations
+Cons:
+• Preview-only (as of July 2025)
+• Missing support for several production features
+• Requires Premium tier
+• Complexity in operations and DR planning
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+3. Side-by-Side Comparison
+Feature
+Geo-DR
+Geo-Replication (Preview)
+Metadata replication
+✅ Yes
+✅ Yes
+Message replication
+❌ No
+✅ Yes
+Failover
+Manual, one-way
+Reversible, low RTO
+Sync/Async support
+❌ N/A
+✅ Yes
+Uses alias
+✅ Yes
+❌ No (same hostname used)
+Code change during failover
+❌ No
+❌ No
+Private endpoints
+❌ Not supported
+❌ Not supported
+Availability
+✅ GA
+🚧 Preview
+Use case
+DR for namespace only
+DR for data + namespace
+ 
+4. Recommended Usage
+✅ Use Geo-DR When:
+• You require namespace continuity (queues/topics)
+• Your system can tolerate message loss in DR scenarios
+• You need a mature, production-grade DR solution
+• You want to keep things simple (no data sync complexity)
+✅ Use Geo-Replication When:
+• You want full message and metadata replication
+• You are okay with preview-level support
+• You need zero-data-loss and active-active/standby DR strategy
+• You’re building new systems and can tolerate evolving features
+ 
+5. Hybrid DR Strategy (Recommended for Enterprise)
+For organizations needing both namespace and message durability, consider combining both approaches:
+• Use Geo-DR for fast alias-based namespace failover
+• Use custom Function Apps or Event Grid to backup and mirror messages between primary and secondary namespaces
+• Optionally: leverage Geo-Replication (once GA) to simplify dual-write logic
